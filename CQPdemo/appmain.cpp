@@ -20,93 +20,62 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
-#define SN(i) (regex_replace(regex_replace(regex_replace(files[i],regex("C:.Users.Administrator.Desktop.CQP.musicpack."),""),regex(".mp3"),""),regex("\\s\\(\\d\\)"),""))
+//#define SN(i) (regex_replace(regex_replace(regex_replace(files[i],regex("C:.Users.Administrator.Desktop.CQP.musicpack."),""),regex(".mp3"),""),regex("\\s\\(\\d\\)"),""))
+//#define SN(i) regex_replace(song_name[i], regex("\\s\\(\\d\\)"), "")
 //#define w2s(i) i
 //#define cjj490168650 Administrator
 
 using namespace std;
 
+const int fsize = 1417;
 int ac = -1; //AuthCode 调用酷Q的方法时需要用到
 bool enabled = false;
 const char * filePath = "C:\\Users\\Administrator\\Desktop\\CQP\\musicpack";
 const char * filePath2 = "C:\\Users\\Administrator\\Desktop\\CQP\\data\\record";
-vector<string> files;
+//vector<string> files;
 map <int64_t, bool> game_status;
 map <int64_t, int> game_round;
 map <int64_t,map<int64_t,int>> score_board;
 map <int64_t, int> song_num;
 map <int64_t, int64_t> QQ_st;
-int fsize,game_cnt;
+int game_cnt;
+vector<string> song_ori;
 vector<string> song_name;
-//int song_len[10010];
+vector<int> song_len;
 
-void getFiles(string path, vector<string>& files)
+void getFiles()
 {
-	//文件句柄  
-	long   hFile = 0;
-	//文件信息  
-	struct _finddata_t fileinfo;
-	string p;
-	if ((hFile = _findfirst(p.assign(path).append("\\*").c_str(), &fileinfo)) != -1)
-	{
-		do
-		{
-			//如果是目录,迭代之  
-			//如果不是,加入列表  
-			if ((fileinfo.attrib &  _A_SUBDIR))
-			{
-				if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
-					getFiles(p.assign(path).append("\\").append(fileinfo.name), files);
-			}
-			else
-			{
-				files.push_back(p.assign(path).append("\\").append(fileinfo.name));
-			}
-		} while (_findnext(hFile, &fileinfo) == 0);
-		_findclose(hFile);
-	}
-}
-
-/*string w2s(wstring wstr)
-{
-	string result;
-	//获取缓冲区大小，并申请空间，缓冲区大小事按字节计算的  
-	int len = WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), NULL, 0, NULL, NULL);
-	char* buffer = new char[len + 1];
-	//宽字节编码转换成多字节编码  
-	WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), buffer, len, NULL, NULL);
-	buffer[len] = '\0';
-	//删除缓冲区并返回值  
-	result.append(buffer);
-	delete[] buffer;
-	return result;
-}*/
-
-/*void getFiles()
-{
-	int tot = 0;
+	song_ori.clear();
+	song_name.clear();
+	song_len.clear();
+	int t;
+	string tmp;
 	//char tmp[1010];
 	//setlocale(LC_ALL, "");
-	ifstream fr("C:\\Users\\cjj490168650\\Desktop\\CQP\\data\\name.txt");
-	ofstream fw("C:\\Users\\cjj490168650\\Desktop\\CQP\\data\\tst.txt");
-	while (getline(fr,song_name[tot++]))
+	ifstream fr("C:\\Users\\Administrator\\Desktop\\CQP\\data\\name.txt");
+	ofstream fw("C:\\Users\\Administrator\\Desktop\\CQP\\data\\tst1.txt");
+	for (int i = 0; i < fsize; i++)
 	{
-		fw << song_name[tot - 1] << "\n";
+		getline(fr, tmp);
+		//song_name.push_back(regex_replace(tmp, regex("\\s\\(\\d\\)"), ""));
+		song_ori.push_back(tmp);
+		song_name.push_back(regex_replace(tmp, regex("\\s\\(\\d\\)"), ""));
+		fw << song_name[i] << "\n";
 	}
-	fsize = tot;
+	//fsize = tot-1;
 	fr.close();
-	//fw << "111";
 	fw.close();
-	fr.open("C:\\Users\\cjj490168650\\Desktop\\CQP\\data\\length.txt");
-	for (int i = 0; i < fsize; i++) fr >> song_len[i];
-	fr.close();
-	FILE *fp=fopen("C:\\Users\\cjj490168650\\Desktop\\CQP\\data\\name.txt","r, ccs = gbk");
-	while (fgets(tmp, sizeof(tmp), fp))
+	fr.open("C:\\Users\\Administrator\\Desktop\\CQP\\data\\length.txt");
+	fw.open("C:\\Users\\Administrator\\Desktop\\CQP\\data\\tst2.txt");
+	for (int i = 0; i < fsize; i++)
 	{
-		song_name[tot++] = tmp;
+		fr >> t;
+		song_len.push_back(t);
+		fw << song_name[i] << " " << song_len[i] << "\n";
 	}
-	fclose(fp);
-}/*
+	fr.close();
+	fw.close();
+}
 
 /* 
 * 返回应用的ApiVer、Appid，打包后将不会调用
@@ -159,14 +128,14 @@ CQEVENT(int32_t, __eventEnable, 0)() {
 	song_num.clear();
 	score_board.clear();
 	QQ_st.clear();
-	files.clear();
-	getFiles(filePath, files);
-	fsize = files.size();
+	//files.clear();
+	//getFiles(filePath, files);
+	//fsize = files.size();
 	//memset(song_name, 0, sizeof(song_name));
-	song_name.clear();
-	for (int i = 0; i < fsize; i++) song_name.push_back(SN(i));
+	//song_name.clear();
+	//for (int i = 0; i < fsize; i++) song_name.push_back(SN(i));
 	//memset(song_len, 0, sizeof(song_len));
-	//getFiles();
+	getFiles();
 	game_cnt = 0;
 	//ifstream fr("C:\\Users\\cjj490168650\\Desktop\\CQP\\data\\length.txt");
 	//for (int i = 0; i < fsize; i++) fr >> song_len[i];
@@ -200,22 +169,24 @@ void AT(int64_t Group, int64_t QQ, string msg)
 * subType 子类型，11/来自好友 1/来自在线状态 2/来自群 3/来自讨论组
 */
 CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t fromQQ, const char *msg, int32_t font) {
-	if (!strcmp(msg, "tst"))
+	if (!strcmp(msg, "songtst"))
 	{
 		stringstream ss;
 		ss << fsize;
-		CQ_sendPrivateMsg(ac, fromQQ, ss.str().c_str());
+		string s_tmp = ss.str();
+		CQ_sendPrivateMsg(ac, fromQQ, s_tmp.c_str());
 		ss.str("");
 		for (int i = 0; i < 5; i++)
 		{
-			//ss << song_name[i] << " " << song_len[i];
+			ss << song_name[i] << " " << song_len[i] << "\n";
 			//ss << song_len[i];
 			//ss << SN(i).c_str() << "\n";
 			//CQ_sendPrivateMsg(ac, fromQQ, SN(i).c_str());
-			CQ_sendPrivateMsg(ac, fromQQ, ss.str().c_str());
-			ss.str("");
+			//CQ_sendPrivateMsg(ac, fromQQ, ss.str().c_str());
 		}
-		//CQ_sendPrivateMsg(ac, fromQQ, ss.str().c_str());
+		ss << song_name[fsize - 1] << " " << song_len[fsize - 1];
+		s_tmp = ss.str();
+		CQ_sendPrivateMsg(ac, fromQQ, s_tmp.c_str());
 		//ss.str("");
 		//如果要回复消息，请调用酷Q方法发送，并且这里 return EVENT_BLOCK - 截断本条消息，不再继续处理  注意：应用优先级设置为"最高"(10000)时，不得使用本返回值
 		//如果不回复消息，交由之后的应用/过滤器处理，这里 return EVENT_IGNORE - 忽略本条消息
@@ -238,10 +209,11 @@ int get_rand(int num)
 int song_select(int len)
 {
 	//srand((int)time(0));
-	int rand_song = get_rand(19260817)%fsize;
-	int rand_st = get_rand(19260817) % 60 + 10;
+	int rand_song = get_rand(fsize);
+	int rand_st = get_rand(song_len[rand_song]-20) + 10;
 	ostringstream ss;
-	ss << "C:\\Users\\Administrator\\Desktop\\CQP\\bin\\ffmpeg.exe -i \"" << files[rand_song] << "\" -ss " << rand_st << " -c copy -t " << len << " \"" << "C:\\Users\\Administrator\\Desktop\\CQP\\data\\record\\" << song_name[rand_song] << ".mp3\" -y";
+	ss << "C:\\Users\\Administrator\\Desktop\\CQP\\bin\\ffmpeg.exe -i \"C:\\Users\\Administrator\\Desktop\\CQP\\musicpack\\" << song_ori[rand_song] << ".mp3\" -ss " 
+		<< rand_st << " -c copy -t " << len << " \"" << "C:\\Users\\Administrator\\Desktop\\CQP\\data\\record\\" << song_name[rand_song] << ".mp3\" -y";
 	string s_tmp = ss.str();
 	system(s_tmp.c_str());//ffmpeg -i input.wmv -ss 30 -c copy -t 10 output.wmv
 	//ss.str("");
@@ -295,12 +267,13 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 	//if (!strcmp(msg,"[CQ:at,qq=3513312871] tst")) CQ_sendGroupMsg(ac,fromGroup,"[CQ:record,file=11-16 Loading ~Intro~.mp3]");
 	if (fromQQ==490168650 && !strcmp(msg, "[CQ:at,qq=3513312871] 更新曲库"))
 	{
-		files.clear();
-		getFiles(filePath, files);
-		fsize = files.size();
+		//files.clear();
+		//getFiles(filePath, files);
+		//fsize = files.size();
 		//memset(song_name, 0, sizeof(song_name));
-		song_name.clear();
-		for (int i = 0; i < fsize; i++) song_name[i] = SN(i);
+		//song_name.clear();
+		//for (int i = 0; i < fsize; i++) song_name[i] = SN(i);
+		getFiles();
 		CQ_sendGroupMsg(ac, fromGroup, "更新成功");
 		return EVENT_IGNORE;
 	}
